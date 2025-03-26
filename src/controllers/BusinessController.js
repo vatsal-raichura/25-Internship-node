@@ -1,5 +1,5 @@
 const BusinessModel = require("../models/BusinessModel");
-
+const mailUtil = require("../utils/MailUtil")
 const bcrypt = require("bcrypt");
 
 const BusinessLogin = async (req, res) => {
@@ -45,6 +45,9 @@ const BusinessSignUp = async (req, res) => {
     const hashedPassword = bcrypt.hashSync(req.body.password, salt);
     req.body.password = hashedPassword;
     const createdUser = await BusinessModel.create(req.body);
+
+     await mailUtil.businessSendingMail(createdUser.email,"welcome to Buyer Talk","this is welcome mail")
+    
     res.status(201).json({
       message: "service created...",
       data: createdUser,

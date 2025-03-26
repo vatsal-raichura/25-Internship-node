@@ -36,6 +36,8 @@ const getAllComplaint = async (req,res)=>{
    }
  }
 
+
+
  const deleteComplaint = async(req,res)=>{
     const deletedComplaint = await ComplaintModel.findByIdAndDelete(req.params.id)
     res.json({

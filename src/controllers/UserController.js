@@ -1,6 +1,8 @@
 const userModel = require("../models/UserModel")
 const bcrypt = require("bcrypt")
 const mailUtil = require("../utils/MailUtil")
+const jwt = require("jsonwebtoken")
+const secret = "secret"
 
 const loginUser = async (req,res)=>{
    // req.body email and password : password
@@ -43,7 +45,7 @@ const signup = async (req,res)=>{
       req.body.password = hashedPassword;
       const createdUser = await userModel.create(req.body);
 
-      await mailUtil.sendingMail(createdUser.email,"welcome to Buyer Talk","this is welcome mail")
+      await mailUtil.userSendingMail(createdUser.email,"welcome to Buyer Talk","this is welcome mail")
 
       res.status(201).json({
          message:"user created...",
@@ -61,6 +63,51 @@ const signup = async (req,res)=>{
    }
 
 }
+
+const forgotPassowrd= async(req,res)=>{
+   const email = req.body.email;
+   const foundUser = await userModel.findOne({email:email})
+
+   if(foundUser != null){
+      const token = jwt.sign(foundUser.toObject(),secret)
+      console.log(token)
+      const url = `http://localhost:5173/resetpassword/${token}`;
+      const mailContent = `<html>
+                              <a href ="${url}"> reset password </a>
+                           </html>`
+      
+      await mailUtil.forgotSendingMail(foundUser.email,"reset password",mailContent);
+      res.status(200).json({
+         message:"reset password link sent to mail "
+      });
+   } else{
+      res.status(404).json({
+         message:"user not found register first"
+      })
+   }
+}
+
+const resetPassword = async (req,res)=>{
+
+   const token = req.body.token;
+   const newPassword = req.body.password;
+
+   const userFromToken = jwt.verify(token,secret)
+
+   const salt = bcrypt.genSaltSync(10);
+   const hashedPassword = bcrypt.compareSync(newPassword,salt);
+   
+
+   const updatedUser = await userModel.findByIdAndUpdate(userFromToken._id,{
+      password:hashedPassword,
+   })
+   res.json({
+      message:"password updated successfully"
+   })
+}
+
+
+
 
 const getAllUsers = async (req,res)=>{
     const users = await userModel.find().populate("roleId")
@@ -110,6 +157,6 @@ const getAllUsers = async (req,res)=>{
  }
 
  module.exports={
-    getAllUsers,addUser,deleteUSer,getUserById,signup,loginUser
+    getAllUsers,addUser,deleteUSer,getUserById,signup,loginUser,forgotPassowrd,resetPassword
  }
 

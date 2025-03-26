@@ -135,6 +135,45 @@ const getProductById = async (req, res) => {
   }
 };
 
+// const getAllProductByCategory = async (req, res) => {
+//   try {
+//     const foundProducts = await ProductModel.find({
+//       categoryId: req.params.categoryId, // Fetch products by category ID
+//     });
+
+//     if (foundProducts.length === 0) {
+//       return res.status(404).json({ message: "No products found for this category" });
+//     }
+
+//     res.status(200).json({
+//       message: "Products fetched successfully",
+//       data: foundProducts,
+//     });
+//   } catch (err) {
+//     res.status(500).json({ message: err.message });
+//   }
+// };
+
+const getAllProductByCategory = async (req, res) => {
+  try {
+    const categoryName = req.params.category; // Get category name from request params
+    const products = await ProductModel.find({ category: categoryName }); // Fetch by category name
+
+    if (products.length === 0) {
+      return res.status(404).json({ message: "No products found for this category" });
+    }
+
+    res.status(200).json({
+      message: "Products found successfully",
+      data: products,
+    });
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+};
+
+
+
 module.exports = {
   getAllProduct,
   addProduct,
@@ -144,4 +183,5 @@ module.exports = {
   getAllProductByBusinessId,
   updateProduct,
   getProductById,
+  getAllProductByCategory
 };

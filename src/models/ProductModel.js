@@ -9,6 +9,21 @@ const productSchema = new Schema({
         type:String
     },
     category:{
+        enum: [
+      
+            'Electronics',
+            'Clothing & Apparel',
+            'Footwear',
+            'Beauty & Personal Care',
+            'Home & Kitchen',
+            'Grocery & Food',
+            'Automobiles & Accessories',
+            'Books & Stationery',
+            'Sports & Fitness',
+            'Toys & Baby Products',
+            'Healthcare & Medicine',
+            'Services'
+          ],
         type:String,
         
     },
@@ -24,10 +39,7 @@ const productSchema = new Schema({
     productURL:{
         type:String
     },
-    rating:{
-        type:Number
-
-    },
+    
 
     businessId:{
         type:Schema.Types.ObjectId,
@@ -41,6 +53,6 @@ const productSchema = new Schema({
     
     
    
-})
+},{timestamps:true})
 
 module.exports = mongoose.model("products",productSchema)

@@ -12,6 +12,9 @@ routes.put('/updateproduct/:id', productController.updateProduct);
 routes.delete("/product/:id",productController.deleteProduct)
 
 routes.post('/addWithFile', productController.addProductWithFile);
+routes.get('/getProductByCategory/:category', productController.getAllProductByCategory);
+
+
 
 
 

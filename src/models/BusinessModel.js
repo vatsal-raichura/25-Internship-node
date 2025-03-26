@@ -38,6 +38,6 @@ const businessSchema = new Schema({
     }
     
    
-})
+},{timestamps:true})
 
 module.exports = mongoose.model("business",businessSchema)

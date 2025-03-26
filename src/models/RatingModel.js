@@ -38,6 +38,6 @@ const ratingSchema = new Schema({
    
     
    
-})
+},{timestamps:true})
 
 module.exports = mongoose.model("ratings",ratingSchema)
