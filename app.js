@@ -44,6 +44,9 @@ app.use("/discussion",discussionRoutes)
 const notificationRoutes = require("./src/routes/NotificationsRoutes")
 app.use("/notification",notificationRoutes)
 
+const contactUsRoutes = require("./src/routes/ContactUsRoutes")
+app.use("/contact",contactUsRoutes)
+
 
 
 mongoose.connect("mongodb://127.0.0.1:27017/25_node_intership").then(()=>{

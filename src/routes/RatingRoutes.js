@@ -9,6 +9,8 @@ routes.post("/rating",ratingController.addRating)
 routes.delete("/rating/:id",ratingController.deleteRating)
 routes.get("/rating/:id",ratingController.getRatingById)
 
+routes.get("/reviewandratingbyuserId/:userId",ratingController.getAllRatingsByUserId)
+
 
 
 

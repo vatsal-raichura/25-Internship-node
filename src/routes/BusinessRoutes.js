@@ -8,6 +8,9 @@ routes.post("/signup",businessController.BusinessSignUp)
 routes.delete("/business/:id",businessController.deleteBusiness)
 routes.get("/business/:id",businessController.getAllBusiness)
 routes.post("/login",businessController.BusinessLogin)
+routes.post("/forgotpassword",businessController.forgotPassword)
+routes.post("/resetpassword",businessController.resetPassword)
+
 
 
 module.exports = routes

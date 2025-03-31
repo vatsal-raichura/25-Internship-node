@@ -1,6 +1,8 @@
 const BusinessModel = require("../models/BusinessModel");
 const mailUtil = require("../utils/MailUtil")
 const bcrypt = require("bcrypt");
+const jwt = require("jsonwebtoken")
+const secret = "secret"
 
 const BusinessLogin = async (req, res) => {
   // req.body email and password : password
@@ -44,9 +46,9 @@ const BusinessSignUp = async (req, res) => {
     const salt = bcrypt.genSaltSync(10);
     const hashedPassword = bcrypt.hashSync(req.body.password, salt);
     req.body.password = hashedPassword;
-    const createdUser = await BusinessModel.create(req.body);
+    const createdBusiness = await BusinessModel.create(req.body);
 
-     await mailUtil.businessSendingMail(createdUser.email,"welcome to Buyer Talk","this is welcome mail")
+     await mailUtil.businessSendingMail(createdBusiness.email,"welcome to Buyer Talk","this is welcome mail")
     
     res.status(201).json({
       message: "service created...",
@@ -60,6 +62,97 @@ const BusinessSignUp = async (req, res) => {
     });
   }
 };
+
+// const forgotPassowrd= async(req,res)=>{
+//    const email = req.body.email;
+//    const foundBusiness = await BusinessModel.findOne({email:email})
+
+//    if(foundBusiness != null){
+//       const token = jwt.sign(foundBusiness.toObject(),secret)
+//       console.log(token)
+//       const url = `http://localhost:5173/businessResetPassword/${token}`;
+//       const mailContent = `<html>
+//                               <a href ="${url}"> reset password </a>
+//                            </html>`
+      
+//       await mailUtil.forgotSendingMail(foundBusiness.email,"reset password",mailContent);
+//       res.status(200).json({
+//          message:"reset password link sent to mail "
+//       });
+//    } else{
+//       res.status(404).json({
+//          message:"user not found register first"
+//       })
+//    }
+// }
+
+// const resetPassword = async (req,res)=>{
+
+//    const token = req.body.token;
+//    const newPassword = req.body.password;
+
+//    const businessFromToken = jwt.verify(token,secret)
+
+//    const salt = bcrypt.genSaltSync(10)
+//    const hashedPassword = bcrypt.compareSync(newPassword,salt)
+   
+
+//    const updatedBusiness = await BusinessModel.findByIdAndUpdate(businessFromToken._id,{
+//       password:hashedPassword,
+//    })
+//    res.json({
+//       message:"password updated successfully"
+//    })
+// }
+
+const forgotPassword = async (req, res) => {
+  const email = req.body.email;
+  const foundBusiness = await BusinessModel.findOne({ email: email });
+
+  if (!foundBusiness) {
+      return res.status(404).json({ message: "Email not found..." });
+  }
+
+  const token = jwt.sign({ _id: foundBusiness._id }, secret, { expiresIn: "15m" });
+  console.log("Generated Token:", token);
+
+  const url = `http://localhost:5173/businessResetPassword/${token}`;
+  const mailContent = `<html>
+                          <a href="${url}">Reset Password</a>   
+                       </html>` ;
+  
+  await mailUtil.forgotSendingMail(foundBusiness.email, "Reset Password", mailContent);
+  
+  return res.status(200).json({
+      message: "Reset password link sent to your mail"
+  });
+};
+
+const resetPassword = async (req, res) => {
+  const token = req.body.token;
+  const newPassword = req.body.password;
+
+  try {
+      const businessFromToken = jwt.verify(token, secret);
+      const business = await BusinessModel.findById(businessFromToken._id);
+
+      if (!business) {
+          return res.status(404).json({ message: "Business not found" });
+      }
+
+      const salt = bcrypt.genSaltSync(10);
+      business.password = bcrypt.hashSync(newPassword, salt);
+
+      await business.save();
+
+      return res.status(200).json({ message: "Password updated successfully" });
+  } catch (error) {
+      console.error("Token Error:", error);
+      return res.status(400).json({ message: "Invalid or expired token" });
+  }
+};
+
+
 
 const getAllBusiness = async (req, res) => {
   const business = await BusinessModel.find().populate("roleId userId");
@@ -108,4 +201,6 @@ module.exports = {
   getBusinessById,
   BusinessSignUp,
   BusinessLogin,
+  forgotPassword,
+  resetPassword
 };
