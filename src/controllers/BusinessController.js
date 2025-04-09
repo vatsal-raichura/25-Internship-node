@@ -4,6 +4,66 @@ const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken")
 const secret = "secret"
 
+
+const express = require("express");
+const router = express.Router();
+// const { verifyBusiness } = require("../middlewares/authMiddleware");
+const Rating = require("../models/RatingModel");
+const Complaint = require("../models/ComplaintModel");
+const Product = require("../models/ProductModel");
+
+
+
+const getBusinessRatings = async (req, res) => {
+  try {
+    const businessId = req.query.businessId;
+    if (!businessId) {
+      return res.status(400).json({ message: "Business ID is required" });
+    }
+
+    // Get all products for this business
+    const products = await Product.find({ businessId });
+    if (!products.length) {
+      return res.json([]); // No products, return empty array
+    }
+
+    const productIds = products.map((product) => product._id);
+
+    // Fetch ratings and populate user data
+    const ratings = await Rating.find({ productId: { $in: productIds } })
+      .populate("userId", "firstname lastname")  // Ensure user data is populated
+      .exec();
+
+    // Structure the response
+    const data = products.map((product) => ({
+      productName: product.name,
+      ratings: ratings
+        .filter((rating) => rating.productId.toString() === product._id.toString())
+        .map((rating) => {
+          console.log("Rating userId:", rating.userId); // Debugging userId
+          
+          return {
+            rating: rating.rating,
+            userName: rating.userId && rating.userId.firstname && rating.userId.lastname
+              ? `${rating.userId.firstname} ${rating.userId.lastname}`
+              : "Unknown User",
+            review_comments: rating.comment || "No review",
+            review_date: rating.review_date || "No comments",
+          };
+        }),
+    }));
+
+    console.log("Final Response Data:", data);
+    res.json(data);
+  } catch (error) {
+    console.error("Error in getBusinessRatings:", error);
+    res.status(500).json({ message: "Internal Server Error" });
+  }
+};
+
+
+
+
 const BusinessLogin = async (req, res) => {
   // req.body email and password : password
 
@@ -202,5 +262,8 @@ module.exports = {
   BusinessSignUp,
   BusinessLogin,
   forgotPassword,
-  resetPassword
+  resetPassword,
+  getBusinessRatings
+
+ 
 };

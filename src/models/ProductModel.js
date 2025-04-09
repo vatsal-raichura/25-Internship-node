@@ -50,6 +50,31 @@ const productSchema = new Schema({
     price:{
         type:Number,
     },
+    rating: {
+        type: Number,
+        default: 0
+    },
+    ratingCount: {
+        type: Number,
+        default: 0
+    },
+    reviews: [
+        {
+          userId: { type: mongoose.Schema.Types.ObjectId, ref: 'users' },
+          rating: Number,
+          comment: String,
+          
+          review_date:Date
+        }
+      ]
+      ,
+    complaints: [
+        {
+          type: Schema.Types.ObjectId,
+          ref: "complaints"
+        }
+    ],
+
     
     
    

@@ -5,7 +5,7 @@ routes.get("/product",productController.getAllProduct)
 routes.post("/products",productController.addProduct)
 
 routes.get('/productsbybusinessid/:businessId', productController.getAllProductByBusinessId);
-routes.get('/getProductById/:id', productController.getProductById);
+routes.get('/getProductById/:productId', productController.getProductById);
 routes.put('/updateproduct/:id', productController.updateProduct);
 
 

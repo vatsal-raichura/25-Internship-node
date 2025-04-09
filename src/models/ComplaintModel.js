@@ -1,53 +1,52 @@
-const mongoose = require("mongoose")
+const mongoose = require("mongoose");
 const Schema = mongoose.Schema;
 
-const complaintsSchema = new Schema({
-    
-    description:{
-        type:String
+const complaintsSchema = new Schema(
+  {
+    description: {
+      type: String,
     },
-    category:{
-        type:String,
-        enum: [
+    category: {
+      type: String,
+      enum: [
+        "Electronics",
+        "Clothing & Apparel",
+        "Footwear",
+        "Beauty & Personal Care",
+        "Home & Kitchen",
+        "Grocery & Food",
+        "Automobiles & Accessories",
+        "Books & Stationery",
+        "Sports & Fitness",
+        "Toys & Baby Products",
+        "Healthcare & Medicine",
+        "Services",
+      ],
+    },
+    status: {
+      type: String,
+      enum: ["Open", "Resolved", "Escalated"],
       
-            'Electronics',
-            'Clothing & Apparel',
-            'Footwear',
-            'Beauty & Personal Care',
-            'Home & Kitchen',
-            'Grocery & Food',
-            'Automobiles & Accessories',
-            'Books & Stationery',
-            'Sports & Fitness',
-            'Toys & Baby Products',
-            'Healthcare & Medicine',
-            'Services'
-          ],
-
+      default: "Open",
     },
-    status:{
-        enum: ['Open', 'Resolved', 'Escalated'],
-        type: String,
-        required: true
-        
+    resolutionMessage: {
+      type: String,
+      default: "", // optional message business can provide when resolving
     },
-
-    productId:{
-          type:Schema.Types.ObjectId,
-        ref:"products"
-
+    productId: {
+      type: Schema.Types.ObjectId,
+      ref: "products",
     },
-    userId:{
-          type:Schema.Types.ObjectId,
-        ref:"users"
-
+    userId: {
+      type: Schema.Types.ObjectId,
+      ref: "users",
     },
-    fileddate:{
-        type:Date,
+    fileddate: {
+      type: Date,
+      default: Date.now,
     },
-    
-    
-   
-},{timestamps:true})
+  },
+  { timestamps: true }
+);
 
-module.exports = mongoose.model("complaints",complaintsSchema)
+module.exports = mongoose.model("complaints", complaintsSchema);
