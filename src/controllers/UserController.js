@@ -4,6 +4,31 @@ const mailUtil = require("../utils/MailUtil")
 const jwt = require("jsonwebtoken")
 const secret = "secret"
 
+const getUserCounts = async (req, res) => {
+   try {
+      // Count active users
+      const activeUsersCount = await userModel.countDocuments({ active: true });
+
+      // Count inactive users
+      const inactiveUsersCount = await userModel.countDocuments({ active: false });
+
+      res.status(200).json({
+         message: "User counts fetched successfully",
+         data: {
+            activeUsers: activeUsersCount,
+            inactiveUsers: inactiveUsersCount
+         }
+      });
+   } catch (err) {
+      console.error("Error fetching user counts:", err);
+      res.status(500).json({
+         message: "Error fetching user counts",
+         data: err
+      });
+   }
+};
+
+
 const loginUser = async (req,res)=>{
    // req.body email and password : password
 
@@ -17,6 +42,14 @@ const loginUser = async (req,res)=>{
    console.log(foundUserFromEmail);
 
    if(foundUserFromEmail!= null){
+
+      if(foundUserFromEmail.isBlocked){
+         return res.status(403).json({
+
+            success:false,
+            message:"Your account has been blocked by the admin"
+         })
+      }
       const isMatch = bcrypt.compareSync(password,foundUserFromEmail.password)
 
       if(isMatch == true){
@@ -25,7 +58,7 @@ const loginUser = async (req,res)=>{
             data:foundUserFromEmail,
          })
       } else{
-         res.status(404).json({
+         res.status(401).json({
             message:"Invalid credentials...",
          })
       }
@@ -208,6 +241,6 @@ const getAllUsers = async (req,res)=>{
  }
 
  module.exports={
-    getAllUsers,addUser,deleteUSer,getUserById,signup,loginUser,forgotPassword,resetPassword
+    getAllUsers,addUser,deleteUSer,getUserById,signup,loginUser,forgotPassword,resetPassword,getUserCounts
  }
 

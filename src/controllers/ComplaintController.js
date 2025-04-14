@@ -9,8 +9,12 @@ const mongoose = require("mongoose")
 
 const getAllComplaint = async (req,res)=>{
     const complaints = await ComplaintModel.find().populate({
-      path: "productId userId", 
-      select: "name brand price productURL", // Select specific product fields
+      path: "productId",
+      select: "name brand price productURL",
+    })
+    .populate({
+      path: "userId",
+      select: "firstname lastname",
     })
     
     .exec();
@@ -151,6 +155,38 @@ const getAllComplaint = async (req,res)=>{
 //   }
 // };
 
+
+// GET /api/complaints/resolution-times
+const getResolutionTimes = async (req, res) => {
+  try {
+    const resolvedComplaints = await ComplaintModel.find({ status: "Resolved" })
+      .populate("productId", "name");
+
+    const resolutionTimes = resolvedComplaints.map((complaint) => {
+      const start = new Date(complaint.createdAt);
+      const end = new Date(complaint.updatedAt);
+      const hoursToResolve = (end - start) / (1000 * 60 * 60); // milliseconds to hours
+
+      return {
+        product: complaint.productId?.name || "Unknown Product",
+        hoursToResolve: parseFloat(hoursToResolve.toFixed(2)),
+      };
+    });
+
+    res.status(200).json({
+      message: "Resolution times fetched successfully",
+      data: resolutionTimes,
+    });
+  } catch (error) {
+    console.error("Error fetching resolution times:", error);
+    res.status(500).json({
+      message: "Internal server error",
+      error: error.message,
+    });
+  }
+};
+
+
 const updateComplaint = async (req, res) => {
   try {
     const { status, resolutionMessage } = req.body;
@@ -205,7 +241,8 @@ const getAllComplaintsByUserId = async (req, res) => {
      }
  
      const complaints = await ComplaintModel.find({ userId: new mongoose.Types.ObjectId(userId) })
-       .populate("productId");
+       .populate("productId","name")
+       .populate("userId", "firstname lastname");;
  
      if (!complaints.length) {
        return res.status(404).json({ message: "No complaints found" });
@@ -308,5 +345,5 @@ const addComplaint = async (req, res) => {
  }
 
  module.exports={
-    getAllComplaint,addComplaint,deleteComplaint,getComplaintById,getAllComplaintsByUserId,updateComplaint,getComplaintsByProductId
+    getAllComplaint,addComplaint,deleteComplaint,getComplaintById,getAllComplaintsByUserId,updateComplaint,getComplaintsByProductId,getResolutionTimes
  }

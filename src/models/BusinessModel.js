@@ -33,8 +33,12 @@ const businessSchema = new Schema({
 
     },
     status:{
+        type:String,
+        default:"Active"
+    },
+    isBlocked :{
         type:Boolean,
-        default:true
+        default:false
     }
     
    

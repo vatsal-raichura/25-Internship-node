@@ -79,6 +79,14 @@ const BusinessLogin = async (req, res) => {
   console.log(foundBusinessFromEmail);
 
   if (foundBusinessFromEmail != null) {
+
+    if(foundUserFromEmail.isBlocked){
+      return res.status(403).json({
+
+         success:false,
+         message:"Your account has been blocked by the admin"
+      })
+   }
     const isMatch = bcrypt.compareSync(
       password,
       foundBusinessFromEmail.password

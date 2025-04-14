@@ -24,6 +24,12 @@ const userSchema = new Schema({
         type:String,
 
     },
+    active: { type: Boolean, default: false }, // active field,
+
+    isBlocked :{
+        type:Boolean,
+        default:false
+    }
     
    
 },{timestamps:true})

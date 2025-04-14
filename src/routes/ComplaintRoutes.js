@@ -11,6 +11,7 @@ routes.get("/complaintbyuserId/:userId",complaintController.getAllComplaintsByUs
 
 routes.get('/product/:productId', complaintController.getComplaintsByProductId);
 routes.put('/update/:id', complaintController.updateComplaint);
+routes.get("/resolution-times", complaintController.getResolutionTimes);
 
 
 

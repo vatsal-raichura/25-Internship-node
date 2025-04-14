@@ -23,6 +23,9 @@ app.use(userRoutes)
 const businessRoutes = require("./src/routes/BusinessRoutes")
 app.use("/business",businessRoutes)
 
+const adminRoutes = require("./src/routes/AdminRoutes")
+app.use("/admin",adminRoutes)
+
 
 const categoryRoutes = require("./src/routes/CategoryRoutes")
 app.use("/category",categoryRoutes)
