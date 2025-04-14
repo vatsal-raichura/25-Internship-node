@@ -1,12 +1,80 @@
+
+const mailUtil = require("../utils/MailUtil")
+const bcrypt = require("bcrypt");
+const jwt = require("jsonwebtoken")
+const secret = "secret"
 const Product = require("../models/ProductModel");
 const Rating = require("../models/RatingModel");
 const Complaint = require("../models/ComplaintModel");
 const User = require("../models/UserModel");
 const Business = require("../models/BusinessModel");
+const Admin = require("../models/AdminModel");
 
 // In AdminController.js
 
 const moment = require('moment');
+
+const adminSignup = async(req,res)=>{
+     
+  try{
+     
+     const salt = bcrypt.genSaltSync(10);
+     const hashedPassword = bcrypt.hashSync(req.body.password, salt);
+     req.body.password = hashedPassword;
+     
+     const createdAdmin = await Admin.create(req.body)
+     await mailUtil.adminSendingMail(createdAdmin.email,"welcome to Buyer Talk","this is welcome mail")
+     res.status(201).json({
+         message:"Admin created..",
+         data:createdAdmin
+
+
+     })
+
+  }catch(err){
+
+     
+
+
+     res.status(500).json({
+         message:"error",
+         data:err.message
+     })
+
+  }
+
+}
+
+const adminLogin = async (req,res) =>{
+
+
+  const email = req.body.email;
+  const password = req.body.password;
+ 
+  const foundAdminFromEmail = await Admin.findOne({email: email}).populate("roleId");
+  console.log(foundAdminFromEmail);
+ 
+  if(foundAdminFromEmail != null){
+      
+      const isMatch = bcrypt.compareSync(password,foundAdminFromEmail.password);
+ 
+      if(isMatch == true){
+          res.status(200).json({
+              message:"login successfully",
+              data:foundAdminFromEmail
+          });
+ 
+      }else{
+          res.status(401).json({
+              message:"invalid cred....",
+          });
+      }
+  }else{
+      res.status(404).json({
+          message:"Email not found..."
+      });
+  }
+ };
 
 
 const getAllUsers = async (req, res) => {
@@ -133,10 +201,20 @@ const getNewUsersByMonth = async (req, res) => {
       User.find(),
       Business.find(),
     ]);
-    const currentMonth = new Date().getMonth();
-    const newUsersThisMonth = users.filter(
-      (u) => new Date(u.createdAt).getMonth() === currentMonth
-    ).length;
+    // const currentMonth = new Date().getMonth();
+    const startOfMonth = new Date(new Date().getFullYear(), new Date().getMonth(), 1);
+    const totalUsers = await User.countDocuments();
+
+const newUsersThisMonth = await User.countDocuments({
+  createdAt: { $gte: startOfMonth }
+});
+
+const thirtyDaysAgo = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000);
+const activeUsers = await User.countDocuments({ createdAt: { $gte: thirtyDaysAgo } }); 
+const inactiveUsers = totalUsers - activeUsers;
+    // const newUsersThisMonth = users.filter(
+    //   (u) => new Date(u.createdAt).getMonth() === currentMonth
+    // ).length;
 
     res.json({
       totalProducts: products.length,
@@ -145,6 +223,8 @@ const getNewUsersByMonth = async (req, res) => {
       totalUsers: users.length,
       totalBusinesses: businesses.length,
       newUsersThisMonth,
+      activeUsers,
+      inactiveUsers,
     });
   }
 
@@ -199,17 +279,34 @@ const getNewUsersByMonth = async (req, res) => {
 
   const getActiveInactiveUserData = async (req, res) => {
     const today = new Date();
-    const thirtyDaysAgo = new Date(today.setDate(today.getDate() - 30));
-  
+    const thirtyDaysAgo = new Date(today);
+    thirtyDaysAgo.setDate(today.getDate() - 30);
+
+    console.log(`Today: ${today}`);
+    console.log(`Thirty Days Ago: ${thirtyDaysAgo}`);
+
     try {
-      const activeUsers = await User.countDocuments({ lastLogin: { $gte: thirtyDaysAgo } });
-      const inactiveUsers = await User.countDocuments({ lastLogin: { $lt: thirtyDaysAgo } });
-  
-      res.json({ activeUsers, inactiveUsers });
+        const activeUsers = await User.countDocuments({
+            lastLogin: { $gte: thirtyDaysAgo }
+        });
+        const inactiveUsers = await User.countDocuments({
+            lastLogin: { $lt: thirtyDaysAgo }
+        });
+
+        console.log(`Active Users: ${activeUsers}, Inactive Users: ${inactiveUsers}`);
+        
+        // Check if the queries returned anything
+        if (activeUsers === 0 && inactiveUsers === 0) {
+            console.log('No users found, check the lastLogin field or query');
+        }
+
+        res.json({ activeUsers, inactiveUsers });
     } catch (error) {
-      res.status(500).send("Server Error");
+        console.error(error);  // Log error for debugging
+        res.status(500).send("Server Error");
     }
-  };
+};
+
   
 
   const getWeeklyComplaints= async (req, res) => {
@@ -293,7 +390,10 @@ module.exports={
     deleteUser,
     getAllBusiness,
     toggleBusinessBlock,
-    deleteBusiness
+    deleteBusiness,
+    adminSignup,
+    adminLogin
+
 
 
 

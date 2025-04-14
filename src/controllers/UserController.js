@@ -52,11 +52,15 @@ const loginUser = async (req,res)=>{
       }
       const isMatch = bcrypt.compareSync(password,foundUserFromEmail.password)
 
+     
+
       if(isMatch == true){
          res.status(200).json({
             message:"login successfully",
             data:foundUserFromEmail,
          })
+
+         await userModel.findByIdAndUpdate(user._id, { lastLogin: new Date() });
       } else{
          res.status(401).json({
             message:"Invalid credentials...",

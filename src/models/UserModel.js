@@ -29,7 +29,11 @@ const userSchema = new Schema({
     isBlocked :{
         type:Boolean,
         default:false
-    }
+    },
+    lastLogin: { 
+        type: Date, 
+        default: Date.now, // Automatically set the current date if not provided
+      },
     
    
 },{timestamps:true})

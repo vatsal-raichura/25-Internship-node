@@ -80,7 +80,7 @@ const BusinessLogin = async (req, res) => {
 
   if (foundBusinessFromEmail != null) {
 
-    if(foundUserFromEmail.isBlocked){
+    if(foundBusinessFromEmail.isBlocked){
       return res.status(403).json({
 
          success:false,
@@ -120,7 +120,7 @@ const BusinessSignUp = async (req, res) => {
     
     res.status(201).json({
       message: "service created...",
-      data: createdUser,
+      data: createdBusiness,
     });
   } catch (err) {
     console.log(err);

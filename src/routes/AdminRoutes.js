@@ -20,5 +20,7 @@ routes.patch("/toggleUserBlock/:id", AdminController.toggleUserBlock);
  routes.get("/allbusiness", AdminController.getAllBusiness);
  routes.delete("/deleteBusiness/:id", AdminController.deleteBusiness);
  routes.patch("/toggleBusinessBlock/:id", AdminController.toggleBusinessBlock);
+ routes.post("/adminLogin", AdminController.adminLogin);
+ routes.post("/adminSignUp", AdminController.adminSignup);
 
 module.exports = routes;
