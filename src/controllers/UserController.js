@@ -60,7 +60,7 @@ const loginUser = async (req,res)=>{
             data:foundUserFromEmail,
          })
 
-         await userModel.findByIdAndUpdate(user._id, { lastLogin: new Date() });
+         await userModel.findByIdAndUpdate(userModel._id, { lastLogin: new Date() });
       } else{
          res.status(401).json({
             message:"Invalid credentials...",
