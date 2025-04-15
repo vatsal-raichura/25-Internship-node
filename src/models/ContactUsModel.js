@@ -8,7 +8,7 @@ const contactUsSchema= new Schema({
     
     email:{
         type:String,
-        unique:true
+       
     },
     message:{
         type:String

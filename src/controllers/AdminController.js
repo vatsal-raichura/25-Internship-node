@@ -153,44 +153,303 @@ const deleteBusiness = async (req, res) => {
   }
 };
 
+const getNewUsersThisMonth = async (req, res) => {
+  try {
+    const now = new Date();
+    const firstDayOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
+    const lastDayOfMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0);
 
+    const newUsersCount = await User.countDocuments({
+      createdAt: { $gte: firstDayOfMonth, $lte: lastDayOfMonth },
+    });
 
+    res.status(200).json({ newUsersThisMonth: newUsersCount });
+  } catch (err) {
+    console.error("Error fetching new users this month:", err);
+    res.status(500).json({ message: "Server error", error: err.message });
+  }
+};
 
+// const getMonthlyUserRegistrations = async (req, res) => {
+//   try {
+//     const users = await User.aggregate([
+//       {
+//         $group: {
+//           _id: {
+//             year: { $year: "$createdAt" },
+//             month: { $month: "$createdAt" }
+//           },
+//           count: { $sum: 1 }
+//         }
+//       },
+//       {
+//         $sort: {
+//           "_id.year": 1,
+//           "_id.month": 1
+//         }
+//       }
+//     ]);
 
-const getNewUsersByMonth = async (req, res) => {
-    try {
-      const data = await User.aggregate([
-        {
-          $group: {
-            _id: {
-              month: { $month: "$createdAt" },
-              year: { $year: "$createdAt" },
-            },
-            count: { $sum: 1 },
+//     const formatted = users.map(({ _id, count }) => ({
+//       name: `${_id.month}/${_id.year}`,
+//       count
+//     }));
+
+//     res.status(200).json({ data: formatted });
+//   } catch (err) {
+//     res.status(500).json({ message: err.message });
+//   }
+// };
+
+// const getMonthlyUserRegistrations = async (req, res) => {
+//   try {
+//     const registrations = await User.aggregate([
+//       {
+//         $group: {
+//           _id: {
+//             year: { $year: "$createdAt" },
+//             month: { $month: "$createdAt" }
+//           },
+//           count: { $sum: 1 }
+//         }
+//       },
+//       {
+//         $sort: {
+//           "_id.year": 1,
+//           "_id.month": 1
+//         }
+//       }
+//     ]);
+
+//     // Determine the date range (first and last months with data)
+//     const now = new Date();
+//     const start = new Date(registrations[0]?._id?.year || now.getFullYear(), (registrations[0]?._id?.month || now.getMonth() + 1) - 1, 1);
+//     const end = new Date(now.getFullYear(), now.getMonth(), 1);
+
+//     const monthNames = ["Jan", "Feb", "Mar", "Apr", "May", "Jun",
+//                         "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+
+//     const completeData = [];
+//     const registrationMap = new Map();
+
+//     // Create a quick lookup map from the aggregation result
+//     registrations.forEach(({ _id, count }) => {
+//       const key = `${_id.year}-${_id.month}`;
+//       registrationMap.set(key, count);
+//     });
+
+//     // Fill in all months between start and end
+//     let current = new Date(start);
+//     while (current <= end) {
+//       const year = current.getFullYear();
+//       const month = current.getMonth() + 1;
+//       const key = `${year}-${month}`;
+//       completeData.push({
+//         name: `${monthNames[month - 1]} ${year}`,
+//         count: registrationMap.get(key) || 0
+//       });
+
+//       current.setMonth(current.getMonth() + 1);
+//     }
+
+//     res.status(200).json({ data: completeData });
+//   } catch (err) {
+//     res.status(500).json({ message: err.message });
+//   }
+// };
+
+const UserModel = require("../models/UserModel");
+
+const getAllMonthlyUserRegistrations = async (req, res) => {
+  try {
+    const now = new Date();
+    const startDate = new Date(now.getFullYear(), now.getMonth() - 2, 1); // Start of 2 months ago
+
+    const result = await UserModel.aggregate([
+      {
+        $match: {
+          createdAt: { $exists: true, $gte: startDate }
+        }
+      },
+      {
+        $group: {
+          _id: {
+            year: { $year: "$createdAt" },
+            month: { $month: "$createdAt" }
           },
-        },
-        { $sort: { "_id.year": 1, "_id.month": 1 } },
-      ]);
-  
-      const formatted = data.map((item) => {
-        const { month, year } = item._id;
-        const monthName = month
-          ? new Date(year, month - 1).toLocaleString("default", { month: "short" })
-          : "Unknown";
-        const label = month && year ? `${monthName} ${year}` : "Unknown";
-        return {
-          label,
-          count: item.count,
-        };
-      });
-  
-      res.json(formatted);
-    } catch (error) {
-      console.error("Error in getNewUserPerMonth:", error);
-      res.status(500).json({ message: "Server error" });
-    }
-  };
-  
+          count: { $sum: 1 }
+        }
+      },
+      {
+        $sort: {
+          "_id.year": 1,
+          "_id.month": 1
+        }
+      }
+    ]);
+
+    const monthNames = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+    
+    // Ensure full 3-month coverage (even if 0 count for a month)
+    const today = new Date();
+    const monthList = Array.from({ length: 3 }, (_, i) => {
+      const d = new Date(today.getFullYear(), today.getMonth() - 2 + i);
+      return { month: d.getMonth() + 1, year: d.getFullYear(), name: monthNames[d.getMonth()] };
+    });
+
+    const formatted = monthList.map(({ month, year, name }) => {
+      const found = result.find(r => r._id.month === month && r._id.year === year);
+      return {
+        name,
+        count: found ? found.count : 0
+      };
+    });
+
+    res.status(200).json({ data: formatted });
+  } catch (err) {
+    console.error("Error fetching user registrations:", err);
+    res.status(500).json({ message: err.message });
+  }
+};
+
+
+
+const getMonthlyBusinessRegistrations = async (req, res) => {
+  try {
+    const now = new Date();
+    const startDate = new Date(now.getFullYear(), now.getMonth() - 2, 1); // Start of 2 months ago
+
+    const result = await Business.aggregate([
+      {
+        $match: {
+          createdAt: { $exists: true, $gte: startDate }
+        }
+      },
+      {
+        $group: {
+          _id: {
+            year: { $year: "$createdAt" },
+            month: { $month: "$createdAt" }
+          },
+          count: { $sum: 1 }
+        }
+      },
+      {
+        $sort: {
+          "_id.year": 1,
+          "_id.month": 1
+        }
+      }
+    ]);
+
+    const monthNames = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+    
+    // Ensure full 3-month coverage (even if 0 count for a month)
+    const today = new Date();
+    const monthList = Array.from({ length: 3 }, (_, i) => {
+      const d = new Date(today.getFullYear(), today.getMonth() - 2 + i);
+      return { month: d.getMonth() + 1, year: d.getFullYear(), name: monthNames[d.getMonth()] };
+    });
+
+    const formatted = monthList.map(({ month, year, name }) => {
+      const found = result.find(r => r._id.month === month && r._id.year === year);
+      return {
+        name,
+        count: found ? found.count : 0
+      };
+    });
+
+    res.status(200).json({ data: formatted });
+  } catch (err) {
+    console.error("Error fetching user registrations:", err);
+    res.status(500).json({ message: err.message });
+  }
+};
+
+// controllers/adminController.js
+const RatingModel = require("../models/RatingModel");
+
+const getRatingDistribution = async (req, res) => {
+  try {
+    const distribution = await RatingModel.aggregate([
+      {
+        $group: {
+          _id: "$rating", // Group by rating value (1–5)
+          count: { $sum: 1 }
+        }
+      },
+      {
+        $sort: { _id: 1 } // Sort ratings from 1 to 5
+      }
+    ]);
+
+    const fullDistribution = [1, 2, 3, 4, 5].map(rating => {
+      const found = distribution.find(d => d._id === rating);
+      return {
+        rating: `${rating}★`,
+        count: found ? found.count : 0
+      };
+    });
+
+    res.status(200).json({ data: fullDistribution });
+  } catch (err) {
+    console.error("Error fetching rating distribution:", err);
+    res.status(500).json({ message: "Internal server error" });
+  }
+};
+
+module.exports = { getRatingDistribution };
+
+// controllers/adminController.js
+const ProductModel = require("../models/ProductModel");
+const BusinessModel = require("../models/BusinessModel");
+
+const getProductCountByBusiness = async (req, res) => {
+  try {
+    const result = await ProductModel.aggregate([
+      {
+        $group: {
+          _id: "$businessId",
+          count: { $sum: 1 }
+        }
+      },
+      {
+        $lookup: {
+          from: "businesses",
+          localField: "_id",
+          foreignField: "_id",
+          as: "business"
+        }
+      },
+      {
+        $unwind: "$business"
+      },
+      {
+        $project: {
+          _id: 0,
+          businessName: "$business.businessname",
+          count: 1
+        }
+      },
+      {
+        $sort: { count: -1 } // Optional: highest product count first
+      }
+    ]);
+
+    res.status(200).json({ data: result });
+  } catch (err) {
+    console.error("Error fetching product count by business:", err);
+    res.status(500).json({ message: "Internal server error" });
+  }
+};
+
+
+
+
+
+
+
+
 
 
   const getStats= async (req, res) => {
@@ -228,163 +487,20 @@ const inactiveUsers = totalUsers - activeUsers;
     });
   }
 
-  const getRatingsPerProduct= async (req, res) => {
-    const ratings = await Rating.find().populate("productId");
-    const reviewMap = {};
-    ratings.forEach((r) => {
-      const product = r.productId?.name || "Unknown";
-      reviewMap[product] = (reviewMap[product] || 0) + 1;
-    });
-    res.json(Object.entries(reviewMap).map(([name, count]) => ({ name, count })));
-  }
-
-  const getRatingDistribution= async (req, res) => {
-    const ratings = await Rating.find();
-    const distribution = [0, 0, 0, 0, 0];
-    ratings.forEach((r) => {
-      distribution[r.rating - 1] += 1;
-    });
-    res.json(distribution.map((value, index) => ({ name: `${index + 1}★`, value })));
-  }
-
-  const getComplaintStatus =  async (req, res) => {
-    const complaints = await Complaint.find();
-    const statusMap = { Open: 0, Resolved: 0, Escalated: 0 };
-    complaints.forEach((c) => {
-      if (statusMap[c.status] !== undefined) statusMap[c.status] += 1;
-    });
-    res.json(Object.entries(statusMap).map(([name, value]) => ({ name, value })));
-  }
-
-  const getUserGrowth =  async (req, res) => {
-    const users = await User.find();
-    const rawMonthlyUsers = {};
-    users.forEach((u) => {
-      const date = new Date(u.createdAt);
-      const key = `${date.getFullYear()}-${date.getMonth()}`;
-      rawMonthlyUsers[key] = (rawMonthlyUsers[key] || 0) + 1;
-    });
-
-    const data = Object.entries(rawMonthlyUsers).map(([key, count]) => {
-      const [year, month] = key.split("-").map(Number);
-      return {
-        name: `${["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"][month]} ${year}`,
-        count,
-        date: new Date(year, month),
-      };
-    });
-
-    res.json(data.sort((a, b) => a.date - b.date).map(({ name, count }) => ({ name, count })));
-  }
-
-  const getActiveInactiveUserData = async (req, res) => {
-    const today = new Date();
-    const thirtyDaysAgo = new Date(today);
-    thirtyDaysAgo.setDate(today.getDate() - 30);
-
-    console.log(`Today: ${today}`);
-    console.log(`Thirty Days Ago: ${thirtyDaysAgo}`);
-
-    try {
-        const activeUsers = await User.countDocuments({
-            lastLogin: { $gte: thirtyDaysAgo }
-        });
-        const inactiveUsers = await User.countDocuments({
-            lastLogin: { $lt: thirtyDaysAgo }
-        });
-
-        console.log(`Active Users: ${activeUsers}, Inactive Users: ${inactiveUsers}`);
-        
-        // Check if the queries returned anything
-        if (activeUsers === 0 && inactiveUsers === 0) {
-            console.log('No users found, check the lastLogin field or query');
-        }
-
-        res.json({ activeUsers, inactiveUsers });
-    } catch (error) {
-        console.error(error);  // Log error for debugging
-        res.status(500).send("Server Error");
-    }
-};
-
-  
-
-  const getWeeklyComplaints= async (req, res) => {
-    const complaints = await Complaint.find();
-    const weeklyMap = {};
-    complaints.forEach((c) => {
-      const filed = new Date(c.fileddate);
-      const week = `${filed.getFullYear()}-W${Math.ceil(((filed - new Date(filed.getFullYear(), 0, 1)) / 86400000 + filed.getDay() + 1) / 7)}`;
-      weeklyMap[week] = (weeklyMap[week] || 0) + 1;
-    });
-    res.json(Object.entries(weeklyMap).map(([name, count]) => ({ name, count })));
-  }
-
-  const getProductCountByBusiness= async (req, res) => {
-    const products = await Product.find().populate("businessId");
-    const businessProductMap = {};
-    products.forEach((p) => {
-      const businessName = p.businessId?.businessname || "Unknown";
-      businessProductMap[businessName] = (businessProductMap[businessName] || 0) + 1;
-    });
-    res.json(Object.entries(businessProductMap).map(([name, count]) => ({ name, count })));
-  }
-
-  const getAverageRatingPerProduct =  async (req, res) => {
-    const ratings = await Rating.find().populate("productId");
-    const ratingMap = {};
-    ratings.forEach((r) => {
-      const product = r.productId?.name || "Unknown";
-      if (!ratingMap[product]) ratingMap[product] = [];
-      ratingMap[product].push(r.rating);
-    });
-
-    const avgRatings = Object.entries(ratingMap).map(([name, list]) => {
-      const total = list.reduce((sum, r) => sum + r, 0);
-      return { name, avg: +(total / list.length).toFixed(2) };
-    });
-
-    res.json(avgRatings);
-  }
-
-  const getComplaintResolutionTime=  async (req, res) => {
-    const complaints = await Complaint.find({ status: "Resolved" }).populate("productId");
-    const resolutionTimes = complaints.map((c) => {
-      const filed = new Date(c.fileddate);
-      const resolved = new Date(c.updatedAt);
-      const days = Math.round((resolved - filed) / (1000 * 60 * 60 * 24));
-      return {
-        name: c.productId?.name || "Unknown",
-        days,
-      };
-    });
-    res.json(resolutionTimes);
-  }
-
-  const getRecentComplaints =  async (req, res) => {
-    const complaints = await Complaint.find()
-      .populate("userId")
-      .populate("productId")
-      .sort({ fileddate: -1 })
-      .limit(5);
-    res.json(complaints);
-  }
+ 
 
 
 
 module.exports={
-    getNewUsersByMonth,
+   
     getStats,
-    getRecentComplaints,
-    getComplaintResolutionTime,
-    getAverageRatingPerProduct,
-    getProductCountByBusiness,
-    getWeeklyComplaints,
-    getUserGrowth,
-    getComplaintStatus,
+    getNewUsersThisMonth,
+   
+    getAllMonthlyUserRegistrations,
+    // getMonthlyUserRegistrations,
+    getMonthlyBusinessRegistrations,
     getRatingDistribution,
-    getRatingsPerProduct,
-    getActiveInactiveUserData,
+    getProductCountByBusiness,
     getAllUsers,
     toggleUserBlock,
     deleteUser,
