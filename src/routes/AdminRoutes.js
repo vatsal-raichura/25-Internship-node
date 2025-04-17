@@ -8,6 +8,11 @@ routes.get("/monthly-users", AdminController.getAllMonthlyUserRegistrations);
 routes.get("/monthly-business", AdminController.getMonthlyBusinessRegistrations);
 routes.get("/rating-distribution", AdminController.getRatingDistribution);
 routes.get("/product-count-by-business", AdminController.getProductCountByBusiness);
+routes.get("/complaints-trend", AdminController.getWeeklyComplaintsTrend);
+routes.get("/complaint-status", AdminController.getComplaintStatusCounts);
+routes.get("/products-by-category", AdminController.getProductCountByCategory);
+routes.get("/active-inactive-users", AdminController.getActiveInactiveUsers);
+routes.get("/user-activity-status", AdminController.getUserActivityStats);
 
 routes.get("/allusers", AdminController.getAllUsers);
 routes.delete("/deleteUser/:id", AdminController.deleteUser);

@@ -32,7 +32,7 @@ const userSchema = new Schema({
     },
     lastLogin: { 
         type: Date, 
-        default: Date.now, // Automatically set the current date if not provided
+        default: null, // Automatically set the current date if not provided
       },
     
    

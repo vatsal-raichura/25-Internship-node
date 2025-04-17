@@ -260,15 +260,69 @@ const getNewUsersThisMonth = async (req, res) => {
 
 const UserModel = require("../models/UserModel");
 
+// const getAllMonthlyUserRegistrations = async (req, res) => {
+//   try {
+//     const now = new Date();
+//     const startDate = new Date(now.getFullYear(), now.getMonth() - 2, 1); // Start of 2 months ago
+
+//     const result = await UserModel.aggregate([
+//       {
+//         $match: {
+//           createdAt: { $exists: true, $gte: startDate }
+//         }
+//       },
+//       {
+//         $group: {
+//           _id: {
+//             year: { $year: "$createdAt" },
+//             month: { $month: "$createdAt" }
+//           },
+//           count: { $sum: 1 }
+//         }
+//       },
+//       {
+//         $sort: {
+//           "_id.year": 1,
+//           "_id.month": 1
+//         }
+//       }
+//     ]);
+
+//     const monthNames = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+    
+//     // Ensure full 3-month coverage (even if 0 count for a month)
+//     const today = new Date();
+//     const monthList = Array.from({ length: 3 }, (_, i) => {
+//       const d = new Date(today.getFullYear(), today.getMonth() - 2 + i);
+//       return { month: d.getMonth() + 1, year: d.getFullYear(), name: monthNames[d.getMonth()] };
+//     });
+
+//     const formatted = monthList.map(({ month, year, name }) => {
+//       const found = result.find(r => r._id.month === month && r._id.year === year);
+//       return {
+//         name,
+//         count: found ? found.count : 0
+//       };
+//     });
+
+//     res.status(200).json({ data: formatted });
+//   } catch (err) {
+//     console.error("Error fetching user registrations:", err);
+//     res.status(500).json({ message: err.message });
+//   }
+// };
+
 const getAllMonthlyUserRegistrations = async (req, res) => {
   try {
     const now = new Date();
     const startDate = new Date(now.getFullYear(), now.getMonth() - 2, 1); // Start of 2 months ago
 
+    console.log("Start Date:", startDate);  // Add logging for debugging
+
     const result = await UserModel.aggregate([
       {
         $match: {
-          createdAt: { $exists: true, $gte: startDate }
+          createdAt: { $gte: startDate }
         }
       },
       {
@@ -288,6 +342,8 @@ const getAllMonthlyUserRegistrations = async (req, res) => {
       }
     ]);
 
+    console.log("Aggregated Result:", result);  // Add logging to see the result
+
     const monthNames = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
     
     // Ensure full 3-month coverage (even if 0 count for a month)
@@ -300,7 +356,7 @@ const getAllMonthlyUserRegistrations = async (req, res) => {
     const formatted = monthList.map(({ month, year, name }) => {
       const found = result.find(r => r._id.month === month && r._id.year === year);
       return {
-        name,
+        month: name,
         count: found ? found.count : 0
       };
     });
@@ -314,6 +370,60 @@ const getAllMonthlyUserRegistrations = async (req, res) => {
 
 
 
+
+// const getMonthlyBusinessRegistrations = async (req, res) => {
+//   try {
+//     const now = new Date();
+//     const startDate = new Date(now.getFullYear(), now.getMonth() - 2, 1); // Start of 2 months ago
+
+//     const result = await Business.aggregate([
+//       {
+//         $match: {
+//           createdAt: { $exists: true, $gte: startDate }
+//         }
+//       },
+//       {
+//         $group: {
+//           _id: {
+//             year: { $year: "$createdAt" },
+//             month: { $month: "$createdAt" }
+//           },
+//           count: { $sum: 1 }
+//         }
+//       },
+//       {
+//         $sort: {
+//           "_id.year": 1,
+//           "_id.month": 1
+//         }
+//       }
+//     ]);
+
+//     const monthNames = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+    
+//     // Ensure full 3-month coverage (even if 0 count for a month)
+//     const today = new Date();
+//     const monthList = Array.from({ length: 3 }, (_, i) => {
+//       const d = new Date(today.getFullYear(), today.getMonth() - 2 + i);
+//       return { month: d.getMonth() + 1, year: d.getFullYear(), name: monthNames[d.getMonth()] };
+//     });
+
+//     const formatted = monthList.map(({ month, year, name }) => {
+//       const found = result.find(r => r._id.month === month && r._id.year === year);
+//       return {
+//         name,
+//         count: found ? found.count : 0
+//       };
+//     });
+
+//     res.status(200).json({ data: formatted });
+//   } catch (err) {
+//     console.error("Error fetching user registrations:", err);
+//     res.status(500).json({ message: err.message });
+//   }
+// };
+
+// controllers/adminController.js
 const getMonthlyBusinessRegistrations = async (req, res) => {
   try {
     const now = new Date();
@@ -322,7 +432,7 @@ const getMonthlyBusinessRegistrations = async (req, res) => {
     const result = await Business.aggregate([
       {
         $match: {
-          createdAt: { $exists: true, $gte: startDate }
+          createdAt: { $gte: startDate }
         }
       },
       {
@@ -361,12 +471,13 @@ const getMonthlyBusinessRegistrations = async (req, res) => {
 
     res.status(200).json({ data: formatted });
   } catch (err) {
-    console.error("Error fetching user registrations:", err);
+    console.error("Error fetching business registrations:", err);
     res.status(500).json({ message: err.message });
   }
 };
 
-// controllers/adminController.js
+
+
 const RatingModel = require("../models/RatingModel");
 
 const getRatingDistribution = async (req, res) => {
@@ -443,6 +554,144 @@ const getProductCountByBusiness = async (req, res) => {
   }
 };
 
+const getWeeklyComplaintsTrend = async (req, res) => {
+  try {
+    const result = await Complaint.aggregate([
+      {
+        $addFields: {
+          week: { $isoWeek: "$fileddate" } // changed from filedDate to fileddate
+        }
+      },
+      {
+        $group: {
+          _id: "$week",
+          count: { $sum: 1 }
+        }
+      },
+      {
+        $sort: { _id: 1 }
+      },
+      {
+        $project: {
+          _id: 0,
+          week: { $concat: ["Week ", { $toString: "$_id" }] },
+          count: 1
+        }
+      }
+    ]);
+
+    res.json({ success: true, data: result });
+  } catch (err) {
+    console.error("Error fetching weekly complaints trend:", err);
+    res.status(500).json({ success: false, message: "Server error" });
+  }
+};
+
+
+const getComplaintStatusCounts = async (req, res) => {
+  try {
+    // Aggregate complaints by their status
+    const result = await Complaint.aggregate([
+      {
+        $group: {
+          _id: "$status", // Group by complaint status
+          count: { $sum: 1 }
+        }
+      },
+      {
+        $sort: { "_id": 1 } // Sort by status (Open, Resolved, Escalated)
+      }
+    ]);
+
+    // Return the response with the counts for each status
+    res.status(200).json({ data: result });
+  } catch (err) {
+    console.error("Error fetching complaint status counts:", err);
+    res.status(500).json({ message: err.message });
+  }
+};
+
+const getProductCountByCategory = async (req, res) => {
+  try {
+    const result = await Product.aggregate([
+      {
+        $group: {
+          _id: "$category",
+          count: { $sum: 1 }
+        }
+      },
+      {
+        $project: {
+          _id: 0,
+          category: "$_id",
+          count: 1
+        }
+      }
+    ]);
+
+    res.status(200).json({ data: result });
+  } catch (err) {
+    console.error("Error fetching product count by category:", err);
+    res.status(500).json({ message: "Server Error" });
+  }
+};
+
+const getActiveInactiveUsers = async (req, res) => {
+  try {
+    const result = await User.aggregate([
+      {
+        $group: {
+          _id: "$active",
+          count: { $sum: 1 }
+        }
+      }
+    ]);
+
+    const formatted = [
+      { name: "Active", value: 0 },
+      { name: "Inactive", value: 0 },
+    ];
+
+    result.forEach(item => {
+      if (item._id === true) {
+        formatted[0].value = item.count;
+      } else {
+        formatted[1].value = item.count;
+      }
+    });
+
+    res.status(200).json({ success: true, data: formatted });
+  } catch (err) {
+    console.error("Error getting active/inactive users:", err);
+    res.status(500).json({ message: err.message });
+  }
+};
+
+const getUserActivityStats = async (req, res) => {
+  try {
+    const tenDaysAgo = new Date();
+    tenDaysAgo.setDate(tenDaysAgo.getDate() - 10);
+
+    const [activeUsers, inactiveUsers] = await Promise.all([
+      UserModel.countDocuments({ lastLogin: { $gte: tenDaysAgo } }),
+      UserModel.countDocuments({ $or: [{ lastLogin: { $lt: tenDaysAgo } }, { lastLogin: null }] }),
+    ]);
+
+    res.status(200).json({
+      success: true,
+      data: {
+        active: activeUsers,
+        inactive: inactiveUsers,
+      },
+    });
+  } catch (err) {
+    console.error("Error fetching user activity stats:", err);
+    res.status(500).json({ message: err.message });
+  }
+};
+
+
+
 
 
 
@@ -500,7 +749,12 @@ module.exports={
     // getMonthlyUserRegistrations,
     getMonthlyBusinessRegistrations,
     getRatingDistribution,
+    getWeeklyComplaintsTrend,
+    getComplaintStatusCounts,
     getProductCountByBusiness,
+    getProductCountByCategory,
+    getActiveInactiveUsers,
+    getUserActivityStats,
     getAllUsers,
     toggleUserBlock,
     deleteUser,
