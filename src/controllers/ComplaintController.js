@@ -241,7 +241,7 @@ const getAllComplaintsByUserId = async (req, res) => {
      }
  
      const complaints = await ComplaintModel.find({ userId: new mongoose.Types.ObjectId(userId) })
-       .populate("productId","name brand price productURL")
+       .populate("productId","name brand price productURL description")
        .populate("userId", "firstname lastname");;
  
      if (!complaints.length) {

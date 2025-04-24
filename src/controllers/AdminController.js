@@ -667,14 +667,47 @@ const getActiveInactiveUsers = async (req, res) => {
   }
 };
 
+// const getUserActivityStats = async (req, res) => {
+//   try {
+//     const tenDaysAgo = new Date();
+//     tenDaysAgo.setDate(tenDaysAgo.getDate() - 10);
+
+//     const [activeUsers, inactiveUsers] = await Promise.all([
+//       UserModel.countDocuments({ lastLogin: { $gte: tenDaysAgo } }),
+//       UserModel.countDocuments({ $or: [{ lastLogin: { $lt: tenDaysAgo } }, { lastLogin: null }] }),
+//     ]);
+
+//     res.status(200).json({
+//       success: true,
+//       data: {
+//         active: activeUsers,
+//         inactive: inactiveUsers,
+//       },
+//     });
+//   } catch (err) {
+//     console.error("Error fetching user activity stats:", err);
+//     res.status(500).json({ message: err.message });
+//   }
+// };
+
+
 const getUserActivityStats = async (req, res) => {
   try {
     const tenDaysAgo = new Date();
     tenDaysAgo.setDate(tenDaysAgo.getDate() - 10);
 
     const [activeUsers, inactiveUsers] = await Promise.all([
+      // Users who logged in within the last 10 days (inclusive)
       UserModel.countDocuments({ lastLogin: { $gte: tenDaysAgo } }),
-      UserModel.countDocuments({ $or: [{ lastLogin: { $lt: tenDaysAgo } }, { lastLogin: null }] }),
+      
+      // Users who haven't logged in for more than 10 days
+      UserModel.countDocuments({
+        $or: [
+          { lastLogin: { $lt: tenDaysAgo } },
+          { lastLogin: { $exists: false } }, // Optional: Handle users with no login yet
+          { lastLogin: null }
+        ]
+      }),
     ]);
 
     res.status(200).json({
@@ -689,8 +722,6 @@ const getUserActivityStats = async (req, res) => {
     res.status(500).json({ message: err.message });
   }
 };
-
-
 
 
 
