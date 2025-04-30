@@ -77,6 +77,56 @@ const adminLogin = async (req,res) =>{
  };
 
 
+ const forgotPassword = async (req, res) => {
+  const email = req.body.email;
+  const foundAdmin = await AdminModel.findOne({ email: email });
+
+  if (!foundAdmin) {
+      return res.status(404).json({ message: "Email not found..." });
+  }
+
+  const token = jwt.sign({ _id: foundAdmin._id }, secret, { expiresIn: "15m" });
+  console.log("Generated Token:", token);
+
+  const url = `http://localhost:5173/adminResetPassword/${token}`;
+  const mailContent = `<html>
+                          <a href="${url}">Reset Password</a>   
+                       </html>` ;
+  
+  await mailUtil.forgotSendingMail(foundAdmin.email, "Reset Password", mailContent);
+  
+  return res.status(200).json({
+      message: "Reset password link sent to your mail"
+  });
+};
+
+const resetPassword = async (req, res) => {
+  const token = req.body.token;
+  const newPassword = req.body.password;
+
+  try {
+      const adminFromToken = jwt.verify(token, secret);
+      const admin = await AdminModel.findById(adminFromToken._id);
+
+      if (!admin) {
+          return res.status(404).json({ message: "Admin not found" });
+      }
+
+      const salt = bcrypt.genSaltSync(10);
+      admin.password = bcrypt.hashSync(newPassword, salt);
+
+      await admin.save();
+
+      return res.status(200).json({ message: "Password updated successfully" });
+  } catch (error) {
+      console.error("Token Error:", error);
+      return res.status(400).json({ message: "Invalid or expired token" });
+  }
+};
+
+
+
+
 const getAllUsers = async (req, res) => {
   try {
     const users = await User.find({}, "-password"); // exclude password
@@ -514,6 +564,7 @@ module.exports = { getRatingDistribution };
 // controllers/adminController.js
 const ProductModel = require("../models/ProductModel");
 const BusinessModel = require("../models/BusinessModel");
+const AdminModel = require("../models/AdminModel");
 
 const getProductCountByBusiness = async (req, res) => {
   try {
@@ -775,6 +826,8 @@ module.exports={
    
     getStats,
     getNewUsersThisMonth,
+    forgotPassword,
+    resetPassword,
    
     getAllMonthlyUserRegistrations,
     // getMonthlyUserRegistrations,
