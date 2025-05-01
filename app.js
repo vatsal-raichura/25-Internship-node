@@ -53,11 +53,22 @@ const contactUsRoutes = require("./src/routes/ContactUsRoutes")
 app.use("/contact",contactUsRoutes)
 
 
-console.log(process.env.MONGODB_URI);
-const mongoURI = process.env.MONGODB_URI || 'mongodb://localhost:27017/25_node_intership';
-mongoose.connect(mongoURI, ).then(()=>{
-    console.log("database connected....")
+
+
+const mongoURI = process.env.MONGODB_URI || 'mongodb://localhost:27017/25_node_internship';
+console.log("Connecting to MongoDB URI:", mongoURI);
+
+mongoose.connect(mongoURI, {
+    useNewUrlParser: true,
+    useUnifiedTopology: true,
 })
+.then(() => {
+    console.log("Database connected...");
+})
+.catch((err) => {
+    console.error("MongoDB connection error:", err);
+});
+
 
 // mongoose.connect(process.env.MONGODB_URI).then(()=>{
 //     console.log("database connected....")
