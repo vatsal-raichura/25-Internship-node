@@ -54,9 +54,14 @@ app.use("/contact",contactUsRoutes)
 
 
 console.log(process.env.MONGODB_URI);
-mongoose.connect(process.env.MONGODB_URI).then(()=>{
+const mongoURI = process.env.MONGODB_URI || 'mongodb://localhost:27017/25_node_intership';
+mongoose.connect(mongoURI, ).then(()=>{
     console.log("database connected....")
 })
+
+// mongoose.connect(process.env.MONGODB_URI).then(()=>{
+//     console.log("database connected....")
+// })
 
 
 const PORT = 3000
