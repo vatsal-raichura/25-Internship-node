@@ -1,7 +1,9 @@
+require('dotenv').config();
 const express= require("express")
 const mongoose = require("mongoose")
 const cors = require("cors")
 const router = express.Router();
+
 
 const app = express()
 app.use(cors())
@@ -51,8 +53,8 @@ const contactUsRoutes = require("./src/routes/ContactUsRoutes")
 app.use("/contact",contactUsRoutes)
 
 
-
-mongoose.connect("mongodb://127.0.0.1:27017/25_node_intership").then(()=>{
+console.log(process.env.MONGODB_URI);
+mongoose.connect(process.env.MONGODB_URI).then(()=>{
     console.log("database connected....")
 })
 

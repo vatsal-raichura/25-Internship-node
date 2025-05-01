@@ -2,7 +2,8 @@
 const mailUtil = require("../utils/MailUtil")
 const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken")
-const secret = "secret"
+const secret = process.env.JWT_SECRET;
+require('dotenv').config();
 const Product = require("../models/ProductModel");
 const Rating = require("../models/RatingModel");
 const Complaint = require("../models/ComplaintModel");

@@ -2,7 +2,9 @@ const BusinessModel = require("../models/BusinessModel");
 const mailUtil = require("../utils/MailUtil")
 const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken")
-const secret = "secret"
+require('dotenv').config();
+const secret = process.env.JWT_SECRET;
+
 
 
 const express = require("express");

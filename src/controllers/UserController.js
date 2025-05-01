@@ -2,7 +2,8 @@ const userModel = require("../models/UserModel")
 const bcrypt = require("bcrypt")
 const mailUtil = require("../utils/MailUtil")
 const jwt = require("jsonwebtoken")
-const secret = "secret"
+const secret = process.env.JWT_SECRET
+require('dotenv').config();
 
 const getUserCounts = async (req, res) => {
    try {
