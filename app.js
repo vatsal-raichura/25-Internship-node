@@ -74,6 +74,11 @@ app.get('/', (req, res) => {
   });
 
 
+app.get('/ping', (req, res) => {
+    res.send('pong');
+  });
+
+
 // mongoose.connect(process.env.MONGODB_URI).then(()=>{
 //     console.log("database connected....")
 // })
