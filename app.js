@@ -6,7 +6,10 @@ const router = express.Router();
 
 
 const app = express()
-app.use(cors())
+app.use(cors({
+    origin: "https://buyer-talk-73g0aoo3d-vatsal-raichuras-projects.vercel.app/",
+    credentials: true
+  }));
 app.use(express.json())
 
 router.post("/user", (req, res) => {
