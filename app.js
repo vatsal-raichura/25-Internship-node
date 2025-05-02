@@ -69,6 +69,10 @@ mongoose.connect(mongoURI, {
     console.error("MongoDB connection error:", err);
 });
 
+app.get('/', (req, res) => {
+    res.send('Buyer Talk backend is running ✅');
+  });
+
 
 // mongoose.connect(process.env.MONGODB_URI).then(()=>{
 //     console.log("database connected....")
