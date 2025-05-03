@@ -1,4 +1,5 @@
 const userModel = require("../models/UserModel")
+const mongoose = require("mongoose")
 const bcrypt = require("bcrypt")
 const mailUtil = require("../utils/MailUtil")
 const jwt = require("jsonwebtoken")
