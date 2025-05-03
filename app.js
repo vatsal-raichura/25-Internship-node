@@ -58,7 +58,7 @@ app.use("/contact",contactUsRoutes)
 
 
 
-const mongoURI = process.env.MONGODB_URI || 'mongodb://localhost:27017/25_node_internship';
+const mongoURI = process.env.MONGO_URI;
 console.log("Connecting to MongoDB URI:", mongoURI);
 
 mongoose.connect(mongoURI, {
