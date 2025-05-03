@@ -30,49 +30,107 @@ const getUserCounts = async (req, res) => {
 };
 
 
-const loginUser = async (req,res)=>{
-   // req.body email and password : password
+// const loginUser = async (req,res)=>{
+//    // req.body email and password : password
 
-   const email= req.body.email;
-   const password = req.body.password;
+//    const email= req.body.email;
+//    const password = req.body.password;
 
-   // normal password compare 
+//    // normal password compare 
 
-   //const foundUserFromEmail = userModel.findOne({email:req.body.email})
-   const foundUserFromEmail =  await userModel.findOne({email:email}).populate("roleId");
-   console.log(foundUserFromEmail);
+//    //const foundUserFromEmail = userModel.findOne({email:req.body.email})
+//    const foundUserFromEmail =  await userModel.findOne({email:email}).populate("roleId");
+//    console.log(foundUserFromEmail);
 
-   if(foundUserFromEmail!= null){
+//    if(foundUserFromEmail!= null){
 
-      if(foundUserFromEmail.isBlocked){
-         return res.status(403).json({
+//       if(foundUserFromEmail.isBlocked){
+//          return res.status(403).json({
 
-            success:false,
-            message:"Your account has been blocked by the admin"
-         })
-      }
-      const isMatch = bcrypt.compareSync(password,foundUserFromEmail.password)
+//             success:false,
+//             message:"Your account has been blocked by the admin"
+//          })
+//       }
+//       const isMatch = bcrypt.compareSync(password,foundUserFromEmail.password)
 
      
 
-      if(isMatch == true){
-         res.status(200).json({
-            message:"login successfully",
-            data:foundUserFromEmail,
-         })
+//       if(isMatch == true){
+//          res.status(200).json({
+//             message:"login successfully",
+//             data:foundUserFromEmail,
+//          })
 
-         await userModel.findByIdAndUpdate(userModel._id, { lastLogin: new Date() });
-      } else{
-         res.status(401).json({
-            message:"Invalid credentials...",
-         })
+//          await userModel.findByIdAndUpdate(foundUserFromEmail._id, { lastLogin: new Date() });
+//       } else{
+//          res.status(401).json({
+//             message:"Invalid credentials...",
+//          })
+//       }
+//    } else{
+//       res.status(404).json({
+//          message:"Email not found..."
+//       })
+//    }
+// }
+
+
+
+const loginUser = async (req, res) => {
+   console.log("Received login request:", req.body);
+   const email = req.body.email;
+   const password = req.body.password;
+
+   try {
+      // Validate email input (ensure it's not an ObjectId)
+      if (mongoose.Types.ObjectId.isValid(email)) {
+         return res.status(400).json({
+            message: "Invalid email format"
+         });
       }
-   } else{
-      res.status(404).json({
-         message:"Email not found..."
-      })
+
+      // Find user by email and populate roleId
+      const foundUserFromEmail = await userModel.findOne({ email: email }).populate("roleId");
+
+      if (!foundUserFromEmail) {
+         return res.status(404).json({
+            message: "Email not found..."
+         });
+      }
+
+      // Check if the user is blocked
+      if (foundUserFromEmail.isBlocked) {
+         return res.status(403).json({
+            success: false,
+            message: "Your account has been blocked by the admin"
+         });
+      }
+
+      // Compare passwords using bcrypt's async method
+      const isMatch = await bcrypt.compare(password, foundUserFromEmail.password);
+      
+      if (isMatch) {
+         // Update last login time after successful login
+         await userModel.findByIdAndUpdate(foundUserFromEmail._id, { lastLogin: new Date() });
+
+         return res.status(200).json({
+            message: "Login successfully",
+            data: foundUserFromEmail,
+         });
+      } else {
+         return res.status(401).json({
+            message: "Invalid credentials...",
+         });
+      }
+   } catch (err) {
+      console.error("Error during login:", err);
+      return res.status(500).json({
+         message: "Internal server error",
+         error: err.message
+      });
    }
-}
+};
+
 
 const signup = async (req,res)=>{
 
