@@ -7,7 +7,7 @@ const router = express.Router();
 
 const app = express()
 app.use(cors({
-    origin: "https://buyer-talk-73g0aoo3d-vatsal-raichuras-projects.vercel.app/",
+    origin: "https://buyer-talk.vercel.app",
     credentials: true
   }));
 app.use(express.json())
